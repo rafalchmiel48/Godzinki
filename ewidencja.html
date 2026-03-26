@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Ewidencja Czasu Pracy</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #111318;
+    --card: #1c1f28;
+    --card2: #222630;
+    --border: #2d3140;
+    --gold: #f0c040;
+    --green: #3de8a0;
+    --red: #ff5f6d;
+    --text: #eaeef7;
+    --muted: #636a82;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 80px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  header {
+    padding: 28px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+
+  header h1 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+
+  header span {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* SUMMARY CARDS */
+  .summary {
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .card .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .card .value {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  .card.gold .value { color: var(--gold); }
+  .card.green .value { color: var(--green); }
+  .card.hours .value { color: var(--text); font-size: 1.3rem; }
+
+  .card .sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+  }
+
+  /* FULL WIDTH CARD ROW */
+  .pay-row {
+    padding: 0 20px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    padding: 8px 20px 10px;
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* FORM */
+  .form-card {
+    margin: 0 20px 16px;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .field input {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    padding: 10px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .field input:focus {
+    border-color: var(--gold);
+  }
+
+  .btn-add {
+    background: var(--gold);
+    color: #111;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    width: 100%;
+  }
+
+  .btn-add:active { opacity: 0.8; transform: scale(0.98); }
+
+  /* ENTRIES LIST */
+  .entries {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .entry {
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 13px 14px;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.25s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .entry-left .date {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .entry-left .time {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .entry-hrs {
+    font-family: 'DM Mono', monospace;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #fff;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .entry-hrs span {
+    font-size: 0.6rem;
+    color: var(--muted);
+  }
+
+  .btn-del {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .btn-del:active { border-color: var(--red); color: var(--red); }
+
+  .empty {
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding: 32px 0;
+    letter-spacing: 0.05em;
+  }
+
+  /* CLEAR BTN */
+  .footer-actions {
+    padding: 20px 20px 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  .btn-clear {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    padding: 9px 20px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .btn-clear:active { border-color: var(--red); color: var(--red); }
+
+  /* Avg per day section */
+  .avg-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .divider { width: 100%; height: 1px; background: var(--border); margin: 2px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⏱ Ewidencja Pracy</h1>
+  <span id="current-date">ładowanie...</span>
+</header>
+
+<div class="summary">
+  <div class="card hours">
+    <span class="label">Razem</span>
+    <span class="value" id="total-hours">0,0</span>
+    <span class="sub">godzin</span>
+  </div>
+  <div class="card">
+    <span class="label">Dni</span>
+    <span class="value" id="total-days" style="color:var(--text)">0</span>
+    <span class="sub">przeprac.</span>
+  </div>
+  <div class="card">
+    <span class="label">Śr./dzień</span>
+    <span class="value" id="avg-day" style="color:var(--text); font-size:1rem">—</span>
+    <span class="sub">godzin</span>
+  </div>
+</div>
+
+<div class="pay-row">
+  <div class="card gold">
+    <span class="label">@ 25 zł/h</span>
+    <span class="value" id="pay25">0,00 zł</span>
+    <span class="sub" id="pay25-avg">śr. 0 zł/dzień</span>
+  </div>
+  <div class="card green">
+    <span class="label">@ 30 zł/h</span>
+    <span class="value" id="pay30">0,00 zł</span>
+    <span class="sub" id="pay30-avg">śr. 0 zł/dzień</span>
+  </div>
+</div>
+
+<div class="section-title">Dodaj wpis</div>
+
+<div class="form-card">
+  <div class="form-row">
+    <div class="field" style="grid-column: span 3">
+      <label>Data</label>
+      <input type="date" id="inp-date">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="field">
+      <label>Od</label>
+      <input type="time" id="inp-start" value="07:00">
+    </div>
+    <div class="field">
+      <label>Do</label>
+      <input type="time" id="inp-end" value="15:00">
+    </div>
+    <div class="field">
+      <label>Godz.</label>
+      <input type="number" id="inp-manual" placeholder="np. 8.5" step="0.5" min="0" max="24">
+    </div>
+  </div>
+  <button class="btn-add" onclick="addEntry()">＋ Dodaj</button>
+</div>
+
+<div class="section-title">Historia</div>
+
+<div class="entries" id="entries-list">
+  <div class="empty" id="empty-msg">Brak wpisów — dodaj pierwszy dzień ↑</div>
+</div>
+
+<div class="footer-actions" id="footer-actions" style="display:none">
+  <button class="btn-clear" onclick="clearAll()">🗑 Wyczyść wszystko</button>
+</div>
+
+<script>
+  // ---- DATA ----
+  const STORAGE_KEY = 'ewidencja_v1';
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function save(entries) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  let entries = load();
+
+  // ---- UTILS ----
+  function fmt(n) {
+    return n.toFixed(2).replace('.', ',');
+  }
+
+  function fmtH(n) {
+    return n.toFixed(1).replace('.', ',');
+  }
+
+  function calcHours(start, end) {
+    if (!start || !end) return null;
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    let mins = (eh * 60 + em) - (sh * 60 + sm);
+    if (mins <= 0) return null;
+    return mins / 60;
+  }
+
+  function formatDatePL(iso) {
+    const d = new Date(iso + 'T12:00:00');
+    const days = ['nd','pn','wt','śr','cz','pt','sb'];
+    const months = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
+    return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  }
+
+  // ---- RENDER ----
+  function render() {
+    const list = document.getElementById('entries-list');
+    const emptyMsg = document.getElementById('empty-msg');
+    const footer = document.getElementById('footer-actions');
+
+    // sort by date desc
+    const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
+
+    // clear
+    list.innerHTML = '';
+
+    if (sorted.length === 0) {
+      list.appendChild(Object.assign(document.createElement('div'), { className: 'empty', textContent: 'Brak wpisów — dodaj pierwszy dzień ↑' }));
+      footer.style.display = 'none';
+    } else {
+      footer.style.display = 'flex';
+      sorted.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'entry';
+
+        const timeLabel = (e.start && e.end) ? `${e.start} – ${e.end}` : 'ręczny wpis';
+
+        div.innerHTML = `
+          <div class="entry-left">
+            <div class="date">${formatDatePL(e.date)}</div>
+            <div class="time">${timeLabel}</div>
+          </div>
+          <div class="entry-hrs">${fmtH(e.hours)} <span>h</span></div>
+          <button class="btn-del" onclick="deleteEntry('${e.id}')">✕</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    // totals
+    const totalH = entries.reduce((s, e) => s + e.hours, 0);
+    const days = entries.length;
+    const avgDay = days > 0 ? totalH / days : 0;
+    const pay25 = totalH * 25;
+    const pay30 = totalH * 30;
+    const avgPay25 = days > 0 ? pay25 / days : 0;
+    const avgPay30 = days > 0 ? pay30 / days : 0;
+
+    document.getElementById('total-hours').textContent = fmtH(totalH);
+    document.getElementById('total-days').textContent = days;
+    document.getElementById('avg-day').textContent = days > 0 ? fmtH(avgDay) : '—';
+    document.getElementById('pay25').textContent = fmt(pay25) + ' zł';
+    document.getElementById('pay30').textContent = fmt(pay30) + ' zł';
+    document.getElementById('pay25-avg').textContent = days > 0 ? `śr. ${Math.round(avgPay25)} zł/dzień` : 'śr. 0 zł/dzień';
+    document.getElementById('pay30-avg').textContent = days > 0 ? `śr. ${Math.round(avgPay30)} zł/dzień` : 'śr. 0 zł/dzień';
+  }
+
+  // ---- ADD ----
+  function addEntry() {
+    const date = document.getElementById('inp-date').value;
+    const start = document.getElementById('inp-start').value;
+    const end = document.getElementById('inp-end').value;
+    const manual = parseFloat(document.getElementById('inp-manual').value);
+
+    if (!date) { alert('Podaj datę!'); return; }
+
+    let hours = null;
+    let usedStart = '', usedEnd = '';
+
+    // prefer manual if filled
+    if (!isNaN(manual) && manual > 0) {
+      hours = manual;
+    } else if (start && end) {
+      hours = calcHours(start, end);
+      usedStart = start;
+      usedEnd = end;
+    }
+
+    if (!hours || hours <= 0) { alert('Podaj godziny (Od/Do) lub wpisz liczbę godzin ręcznie.'); return; }
+
+    const entry = {
+      id: Date.now().toString(),
+      date,
+      start: usedStart,
+      end: usedEnd,
+      hours: Math.round(hours * 4) / 4 // round to 0.25
+    };
+
+    entries.push(entry);
+    save(entries);
+    render();
+
+    // reset manual, keep date/time for convenience
+    document.getElementById('inp-manual').value = '';
+    document.getElementById('inp-end').value = '15:00';
+  }
+
+  // ---- DELETE ----
+  function deleteEntry(id) {
+    entries = entries.filter(e => e.id !== id);
+    save(entries);
+    render();
+  }
+
+  // ---- CLEAR ----
+  function clearAll() {
+    if (confirm('Usunąć wszystkie wpisy?')) {
+      entries = [];
+      save(entries);
+      render();
+    }
+  }
+
+  // ---- INIT ----
+  function init() {
+    // set today's date as default
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    document.getElementById('inp-date').value = `${y}-${m}-${d}`;
+
+    // header date
+    const days = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
+    const months = ['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
+    document.getElementById('current-date').textContent =
+      `${days[today.getDay()]}, ${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()}`;
+
+    // add enter key support
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') addEntry();
+    });
+
+    render();
+  }
+
+  init();
+</script>
+</body>
+</html>
