@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Godzinki</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1016;
+    --card: #181b24;
+    --card2: #1e2130;
+    --border: #272c3d;
+    --gold: #f0c040;
+    --green: #3de8a0;
+    --blue: #5b9cf6;
+    --pink: #f06090;
+    --purple: #a78bfa;
+    --red: #ff5f6d;
+    --text: #eaeef7;
+    --muted: #5a6078;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 100px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* TABS NAV */
+  .tabs-nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs-nav::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 14px 10px 12px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    color: var(--text);
+    border-bottom-color: var(--gold);
+  }
+  .tab-btn .dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  /* PAGES */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* OVERVIEW PAGE */
+  .overview-header {
+    margin-bottom: 16px;
+  }
+  .overview-header h1 {
+    font-size: 1.3rem;
+    font-weight: 800;
+  }
+  .overview-header p {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .job-summary-card {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    background: var(--card);
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .job-summary-card:active { border-color: var(--gold); }
+
+  .job-summary-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .job-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .job-color-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .job-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+  .job-rate {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .job-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .stat {
+    background: var(--card2);
+    border-radius: 10px;
+    padding: 9px 10px;
+  }
+  .stat .s-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .stat .s-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.92rem;
+    font-weight: 500;
+  }
+
+  /* TOTAL ROW */
+  .total-card {
+    background: var(--card2);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    margin-top: 6px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .total-card .t-item .t-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .total-card .t-item .t-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--gold);
+  }
+
+  /* ADD ENTRY PAGE */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .form-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* JOB SELECTOR */
+  .job-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .job-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    background: var(--card2);
+    border-radius: 12px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .job-option.selected {
+    border-color: var(--gold);
+  }
+  .job-option .jo-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .job-option .jo-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex: 1;
+  }
+  .job-option .jo-rate {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .field input, .field select {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.92rem;
+    padding: 11px 12px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .field input:focus { border-color: var(--gold); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  .btn-primary {
+    background: var(--gold);
+    color: #111;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-primary:active { opacity: 0.8; transform: scale(0.98); }
+
+  .or-divider {
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    position: relative;
+  }
+  .or-divider::before, .or-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background: var(--border);
+  }
+  .or-divider::before { left: 0; }
+  .or-divider::after { right: 0; }
+
+  /* HISTORY PAGE */
+  .filter-row {
+    display: flex;
+    gap: 7px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .filter-chip.active {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .entry-item {
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .entry-color-bar {
+    width: 3px;
+    height: 36px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .entry-info .e-date {
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .entry-info .e-job {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .entry-info .e-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+  }
+  .entry-hrs {
+    font-family: 'DM Mono', monospace;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #fff;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .entry-hrs small {
+    font-size: 0.6rem;
+    color: var(--muted);
+  }
+  .btn-del {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-del:active { border-color: var(--red); color: var(--red); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 2;
+  }
+
+  /* JOBS PAGE */
+  .job-manage-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+  }
+  .job-manage-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+  }
+  .job-manage-info .jm-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+  .job-manage-info .jm-rate {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .btn-edit-job {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-edit-job:active { border-color: var(--gold); color: var(--gold); }
+
+  /* COLOR PICKER */
+  .color-picker {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .color-swatch {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2.5px solid transparent;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .color-swatch.selected { border-color: #fff; transform: scale(1.15); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: 20px 20px 0 0;
+    border: 1px solid var(--border);
+    padding: 20px 20px 36px;
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(60px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-title {
+    font-size: 1rem;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+  .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .btn-secondary {
+    background: var(--card2);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 13px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-secondary:active { opacity: 0.7; }
+  .btn-danger {
+    background: none;
+    color: var(--red);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: border-color 0.15s;
+  }
+  .btn-danger:active { border-color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- TABS -->
+<nav class="tabs-nav" id="tabs-nav"></nav>
+
+<!-- PAGE: OVERVIEW -->
+<div class="page active" id="page-overview">
+  <div class="overview-header">
+    <h1>📊 Podsumowanie</h1>
+    <p id="ov-date">ładowanie...</p>
+  </div>
+  <div id="ov-jobs"></div>
+  <div class="total-card" id="ov-total" style="display:none">
+    <div class="t-item"><div class="t-label">Łącznie h</div><div class="t-val" id="ov-total-h">0</div></div>
+    <div class="t-item"><div class="t-label">Łącznie dni</div><div class="t-val" id="ov-total-d" style="color:var(--text)">0</div></div>
+    <div class="t-item"><div class="t-label">Łącznie zł</div><div class="t-val" id="ov-total-pln">0</div></div>
+  </div>
+</div>
+
+<!-- PAGE: ADD -->
+<div class="page" id="page-add">
+  <div class="section-label">Wybierz zlecenie</div>
+  <div class="job-selector" id="add-job-selector"></div>
+
+  <br>
+  <div class="section-label">Wpisz godziny</div>
+  <div class="form-card">
+    <div class="field">
+      <label>Data</label>
+      <input type="date" id="inp-date">
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Od</label>
+        <input type="time" id="inp-start" value="07:00">
+      </div>
+      <div class="field">
+        <label>Do</label>
+        <input type="time" id="inp-end" value="15:00">
+      </div>
+    </div>
+    <div class="or-divider">lub wpisz ręcznie</div>
+    <div class="field">
+      <label>Liczba godzin (np. 8.5)</label>
+      <input type="number" id="inp-manual" placeholder="np. 8.5" step="0.25" min="0" max="24">
+    </div>
+    <button class="btn-primary" onclick="addEntry()">＋ Dodaj wpis</button>
+  </div>
+</div>
+
+<!-- PAGE: HISTORY -->
+<div class="page" id="page-history">
+  <div class="filter-row" id="filter-row"></div>
+  <div id="history-list"></div>
+</div>
+
+<!-- PAGE: JOBS -->
+<div class="page" id="page-jobs">
+  <div class="section-label">Twoje zlecenia</div>
+  <div id="jobs-list"></div>
+  <div class="section-label">Dodaj zlecenie</div>
+  <div class="form-card">
+    <div class="field">
+      <label>Nazwa zlecenia</label>
+      <input type="text" id="new-job-name" placeholder="np. Etat, Zlecenie 1...">
+    </div>
+    <div class="field">
+      <label>Stawka zł/h</label>
+      <input type="number" id="new-job-rate" placeholder="np. 25" step="0.5" min="0">
+    </div>
+    <div class="field">
+      <label>Kolor</label>
+      <div class="color-picker" id="new-job-colors"></div>
+    </div>
+    <button class="btn-primary" onclick="addJob()">＋ Dodaj zlecenie</button>
+  </div>
+</div>
+
+<!-- MODAL: Edit Job -->
+<div class="modal-overlay" id="modal-edit-job">
+  <div class="modal">
+    <div class="modal-title">Edytuj zlecenie</div>
+    <input type="hidden" id="edit-job-id">
+    <div class="field">
+      <label>Nazwa</label>
+      <input type="text" id="edit-job-name">
+    </div>
+    <div class="field">
+      <label>Stawka zł/h</label>
+      <input type="number" id="edit-job-rate" step="0.5" min="0">
+    </div>
+    <div class="field">
+      <label>Kolor</label>
+      <div class="color-picker" id="edit-job-colors"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Anuluj</button>
+      <button class="btn-primary" onclick="saveEditJob()">Zapisz</button>
+    </div>
+    <button class="btn-danger" onclick="deleteJob()">🗑 Usuń zlecenie</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'godzinki_v2';
+const COLORS = ['#f0c040','#3de8a0','#5b9cf6','#f06090','#a78bfa','#fb923c','#34d399','#f87171','#60a5fa','#e879f9'];
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null; } catch { return null; }
+}
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// Default state with 3 jobs
+let state = loadData() || {
+  jobs: [
+    { id: 'j1', name: 'Etat', rate: 25, color: '#f0c040' },
+    { id: 'j2', name: 'Zlecenie 1', rate: 30, color: '#3de8a0' },
+    { id: 'j3', name: 'Zlecenie 2', rate: 28, color: '#5b9cf6' },
+  ],
+  entries: [],
+  selectedJob: 'j1'
+};
+
+// ---- TABS ----
+const TABS = [
+  { id: 'overview', label: '📊 Przegląd' },
+  { id: 'add', label: '＋ Dodaj' },
+  { id: 'history', label: '📋 Historia' },
+  { id: 'jobs', label: '⚙️ Zlecenia' },
+];
+
+let activeTab = 'overview';
+
+function renderTabs() {
+  const nav = document.getElementById('tabs-nav');
+  nav.innerHTML = TABS.map(t => `
+    <button class="tab-btn ${activeTab === t.id ? 'active' : ''}" onclick="switchTab('${t.id}')">
+      ${t.label}
+    </button>
+  `).join('');
+}
+
+function switchTab(id) {
+  activeTab = id;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  renderTabs();
+  if (id === 'overview') renderOverview();
+  if (id === 'add') renderAddPage();
+  if (id === 'history') renderHistory('all');
+  if (id === 'jobs') renderJobsPage();
+}
+
+// ---- UTILS ----
+function fmtH(n) { return (Math.round(n * 10) / 10).toFixed(1).replace('.', ','); }
+function fmtPLN(n) { return n.toFixed(2).replace('.', ',') + ' zł'; }
+function calcHours(start, end) {
+  if (!start || !end) return null;
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  const mins = (eh * 60 + em) - (sh * 60 + sm);
+  return mins > 0 ? mins / 60 : null;
+}
+function formatDatePL(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  const days = ['nd','pn','wt','śr','cz','pt','sb'];
+  const months = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+function getJob(id) { return state.jobs.find(j => j.id === id); }
+
+// ---- OVERVIEW ----
+function renderOverview() {
+  const today = new Date();
+  const days2 = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
+  const months2 = ['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
+  document.getElementById('ov-date').textContent =
+    `${days2[today.getDay()]}, ${today.getDate()} ${months2[today.getMonth()]} ${today.getFullYear()}`;
+
+  const container = document.getElementById('ov-jobs');
+  container.innerHTML = '';
+
+  let totalH = 0, totalD = 0, totalPLN = 0;
+
+  state.jobs.forEach(job => {
+    const jobEntries = state.entries.filter(e => e.jobId === job.id);
+    const hours = jobEntries.reduce((s, e) => s + e.hours, 0);
+    const days = jobEntries.length;
+    const pln = hours * job.rate;
+    const avg = days > 0 ? hours / days : 0;
+
+    totalH += hours; totalD += days; totalPLN += pln;
+
+    const card = document.createElement('div');
+    card.className = 'job-summary-card';
+    card.onclick = () => { switchTab('history'); renderHistory(job.id); };
+    card.innerHTML = `
+      <div class="job-summary-top">
+        <div class="job-name-row">
+          <div class="job-color-dot" style="background:${job.color}"></div>
+          <div class="job-name">${job.name}</div>
+        </div>
+        <div class="job-rate">${job.rate} zł/h</div>
+      </div>
+      <div class="job-stats">
+        <div class="stat">
+          <div class="s-label">Godziny</div>
+          <div class="s-val" style="color:${job.color}">${fmtH(hours)} h</div>
+        </div>
+        <div class="stat">
+          <div class="s-label">Dni</div>
+          <div class="s-val">${days}</div>
+        </div>
+        <div class="stat">
+          <div class="s-label">Zarobek</div>
+          <div class="s-val" style="color:${job.color}">${Math.round(pln)} zł</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  // Total
+  if (state.entries.length > 0) {
+    document.getElementById('ov-total').style.display = 'grid';
+    document.getElementById('ov-total-h').textContent = fmtH(totalH) + ' h';
+    document.getElementById('ov-total-d').textContent = totalD;
+    document.getElementById('ov-total-pln').textContent = Math.round(totalPLN) + ' zł';
+  } else {
+    document.getElementById('ov-total').style.display = 'none';
+  }
+}
+
+// ---- ADD PAGE ----
+function renderAddPage() {
+  const sel = document.getElementById('add-job-selector');
+  sel.innerHTML = state.jobs.map(job => `
+    <div class="job-option ${state.selectedJob === job.id ? 'selected' : ''}"
+         onclick="selectJob('${job.id}')">
+      <div class="jo-dot" style="background:${job.color}"></div>
+      <div class="jo-name">${job.name}</div>
+      <div class="jo-rate">${job.rate} zł/h</div>
+    </div>
+  `).join('');
+}
+
+function selectJob(id) {
+  state.selectedJob = id;
+  saveData();
+  renderAddPage();
+}
+
+function addEntry() {
+  const date = document.getElementById('inp-date').value;
+  const start = document.getElementById('inp-start').value;
+  const end = document.getElementById('inp-end').value;
+  const manual = parseFloat(document.getElementById('inp-manual').value);
+
+  if (!date) { alert('Podaj datę!'); return; }
+  if (!state.selectedJob) { alert('Wybierz zlecenie!'); return; }
+
+  let hours = null, usedStart = '', usedEnd = '';
+
+  if (!isNaN(manual) && manual > 0) {
+    hours = manual;
+  } else if (start && end) {
+    hours = calcHours(start, end);
+    usedStart = start; usedEnd = end;
+  }
+
+  if (!hours || hours <= 0) { alert('Podaj godziny (Od/Do) lub wpisz ręcznie.'); return; }
+
+  state.entries.push({
+    id: Date.now().toString(),
+    jobId: state.selectedJob,
+    date, start: usedStart, end: usedEnd,
+    hours: Math.round(hours * 4) / 4
+  });
+
+  saveData();
+
+  // Reset
+  document.getElementById('inp-manual').value = '';
+  document.getElementById('inp-end').value = '15:00';
+
+  // Show feedback
+  const btn = document.querySelector('#page-add .btn-primary');
+  btn.textContent = '✓ Dodano!';
+  setTimeout(() => { btn.textContent = '＋ Dodaj wpis'; }, 1500);
+}
+
+// ---- HISTORY ----
+let activeFilter = 'all';
+
+function renderHistory(filter) {
+  activeFilter = filter;
+  const filterRow = document.getElementById('filter-row');
+  const chips = [{ id: 'all', label: 'Wszystkie' }, ...state.jobs.map(j => ({ id: j.id, label: j.name }))];
+  filterRow.innerHTML = chips.map(c => `
+    <div class="filter-chip ${activeFilter === c.id ? 'active' : ''}" onclick="renderHistory('${c.id}')">
+      ${c.label}
+    </div>
+  `).join('');
+
+  const list = document.getElementById('history-list');
+  let entries = [...state.entries];
+  if (filter !== 'all') entries = entries.filter(e => e.jobId === filter);
+  entries.sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="empty-state">Brak wpisów<br>Dodaj pierwszy dzień →</div>';
+    return;
+  }
+
+  list.innerHTML = entries.map(e => {
+    const job = getJob(e.jobId);
+    if (!job) return '';
+    const timeLabel = (e.start && e.end) ? `${e.start}–${e.end}` : 'ręcznie';
+    const earn = (e.hours * job.rate).toFixed(0);
+    return `
+      <div class="entry-item">
+        <div class="entry-color-bar" style="background:${job.color}"></div>
+        <div class="entry-info">
+          <div class="e-date">${formatDatePL(e.date)}</div>
+          <div class="e-job">${job.name} · ${timeLabel}</div>
+        </div>
+        <div class="entry-hrs">${fmtH(e.hours)}<small> h</small><br><small style="color:${job.color}">${earn} zł</small></div>
+        <button class="btn-del" onclick="deleteEntry('${e.id}')">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteEntry(id) {
+  state.entries = state.entries.filter(e => e.id !== id);
+  saveData();
+  renderHistory(activeFilter);
+  if (activeTab === 'overview') renderOverview();
+}
+
+// ---- JOBS PAGE ----
+let selectedNewColor = COLORS[0];
+let selectedEditColor = COLORS[0];
+
+function renderColorPicker(containerId, selected, onSelect) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = COLORS.map(c => `
+    <div class="color-swatch ${c === selected ? 'selected' : ''}"
+         style="background:${c}"
+         onclick="(${onSelect.toString()})('${c}', '${containerId}')">
+    </div>
+  `).join('');
+}
+
+function pickNewColor(color, containerId) {
+  selectedNewColor = color;
+  renderColorPicker('new-job-colors', selectedNewColor, pickNewColor);
+}
+
+function pickEditColor(color, containerId) {
+  selectedEditColor = color;
+  renderColorPicker('edit-job-colors', selectedEditColor, pickEditColor);
+}
+
+function renderJobsPage() {
+  const list = document.getElementById('jobs-list');
+  list.innerHTML = state.jobs.map(job => `
+    <div class="job-manage-card">
+      <div class="job-manage-dot" style="background:${job.color}"></div>
+      <div class="job-manage-info">
+        <div class="jm-name">${job.name}</div>
+        <div class="jm-rate">${job.rate} zł/h · ${state.entries.filter(e=>e.jobId===job.id).length} wpisów</div>
+      </div>
+      <button class="btn-edit-job" onclick="openEditJob('${job.id}')">Edytuj</button>
+    </div>
+  `).join('');
+
+  renderColorPicker('new-job-colors', selectedNewColor, pickNewColor);
+}
+
+function addJob() {
+  const name = document.getElementById('new-job-name').value.trim();
+  const rate = parseFloat(document.getElementById('new-job-rate').value);
+  if (!name) { alert('Podaj nazwę zlecenia!'); return; }
+  if (isNaN(rate) || rate <= 0) { alert('Podaj stawkę!'); return; }
+
+  state.jobs.push({ id: 'j' + Date.now(), name, rate, color: selectedNewColor });
+  saveData();
+
+  document.getElementById('new-job-name').value = '';
+  document.getElementById('new-job-rate').value = '';
+  renderJobsPage();
+}
+
+function openEditJob(id) {
+  const job = getJob(id);
+  if (!job) return;
+  document.getElementById('edit-job-id').value = id;
+  document.getElementById('edit-job-name').value = job.name;
+  document.getElementById('edit-job-rate').value = job.rate;
+  selectedEditColor = job.color;
+  renderColorPicker('edit-job-colors', selectedEditColor, pickEditColor);
+  document.getElementById('modal-edit-job').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-edit-job').classList.remove('open');
+}
+
+function saveEditJob() {
+  const id = document.getElementById('edit-job-id').value;
+  const name = document.getElementById('edit-job-name').value.trim();
+  const rate = parseFloat(document.getElementById('edit-job-rate').value);
+  if (!name || isNaN(rate)) { alert('Uzupełnij dane!'); return; }
+
+  const job = getJob(id);
+  if (job) { job.name = name; job.rate = rate; job.color = selectedEditColor; }
+  saveData();
+  closeModal();
+  renderJobsPage();
+  renderOverview();
+}
+
+function deleteJob() {
+  const id = document.getElementById('edit-job-id').value;
+  const cnt = state.entries.filter(e => e.jobId === id).length;
+  if (cnt > 0 && !confirm(`To zlecenie ma ${cnt} wpisów. Usunąć wszystko?`)) return;
+  state.jobs = state.jobs.filter(j => j.id !== id);
+  state.entries = state.entries.filter(e => e.jobId !== id);
+  saveData();
+  closeModal();
+  renderJobsPage();
+}
+
+// ---- INIT ----
+function init() {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  document.getElementById('inp-date').value = `${y}-${m}-${d}`;
+
+  renderTabs();
+  renderOverview();
+  renderAddPage();
+}
+
+// Close modal on overlay click
+document.getElementById('modal-edit-job').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+init();
+</script>
+</body>
+</html>
